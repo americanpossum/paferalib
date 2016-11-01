@@ -1,0 +1,34 @@
+body,
+.ButtonBar a,
+header a,
+nav a,
+.Tag
+{
+	color:			#fff !important;
+	text-shadow:
+		-0.03em -0.03em 0 #000,
+		0.03em -0.03em 0 #000,
+		-0.03em 0.03em 0 #000,
+		0.03em 0.03em 0 #000;
+}
+
+nav a
+{
+	border-right:		0.03em solid white !important;
+}
+
+.Error a
+{
+	color:	black;
+}
+
+.Error a:hover
+{
+	color:	white;
+	background-color:	black;
+}
+
+.Bordered th, .Bordered td
+{
+	border:	0.05em solid white;
+}

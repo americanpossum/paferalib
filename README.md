@@ -616,4 +616,5 @@ Paferalib natively supports linking objects to each other in a many-to-many rela
 	
 	var_dump($bob->Linked('user', BOSS)); # Returns $tom
 	var_dump($bob->Linked('user', EMPLOYEES)); # Returns [$jane, $mary] in that order
-	
+
+

@@ -1,0 +1,26 @@
+Options +FollowSymLinks -Indexes
+
+RewriteEngine On
+RewriteBase /
+
+# Redirect to https
+#RewriteCond %{HTTPS} off
+#RewriteRule (.*) https://%{SERVER_NAME}/%$1 [R,L] 
+
+# Short URLs
+RewriteRule ^c/([^/]+)/(.*)		/apps/$1/css/$2			[L]
+RewriteRule ^d/(.*)						/data/$1						[L]
+RewriteRule ^i/([^/]+)/(.*)		/apps/$1/images/$2	[L]
+RewriteRule ^j/([^/]+)/(.*)		/apps/$1/js/$2			[L]
+RewriteRule ^s/([^/]+)/(.*)		/apps/$1/sounds/$2	[L]
+RewriteRule ^v/([^/]+)/(.*)		/apps/$1/videos/$2	[L]
+RewriteRule ^private/(.*)			/404								[L]
+
+# Filter bad URLs
+RewriteCond %{THE_REQUEST} ^.*(\\r|\\n|%0A|%0D|private).* [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# Redirect all nonexistent URLs to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.php?url=$1 [L,QSA]

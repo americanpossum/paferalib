@@ -1,0 +1,67 @@
+.HeaderLeft
+{
+	display:	flex;
+	float:		none;
+	text-align:	center;
+	padding:	0em;
+	font-size:	0.8em;
+	min-height:	2em;
+}
+
+.HeaderLeft img
+{
+	margin:	0.5em;
+}
+
+.PageTitle
+{
+	position:	relative;
+	top:		0.5em;
+}
+
+.HeaderRight
+{
+	width:		100%;
+	float:		none;
+	padding:	0em;
+}
+
+.HeaderRight li
+{
+	display:	block;
+	float:		left;
+	width:		24%;
+	position:	relative;
+	left:		0em;
+	top:		0em;
+}
+
+.HeaderRight img
+{
+	padding:	1.1em !important;
+}
+
+.OnlyLarge
+{
+	display:	none;
+}
+
+.PhoneWidth
+{
+	width:	97%;
+}
+
+.PhoneWidth a
+{
+	width:	97%;
+}
+
+.LargeOnly
+{
+	display:	none;
+}
+
+.ContextMenu a, .FolderList a
+{
+	font-size:	1.5em;
+}
