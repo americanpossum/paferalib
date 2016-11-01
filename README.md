@@ -242,6 +242,8 @@ Site-specific collection of strings. This should contain your site name and anyt
 
 The database class is... strangely enough... called DB. The default instance can be found in $D. All site settings including database login information can be found in the JSON file private/pafera.cfg. It would be a good idea to ensure that you don't accidentally send or upload this file anywhere.
 
+Paferalib's database supports all of the normal SQL operations and includes object linking, translations, tagging, properties, and many other convenient tools. Of course, the downside to using any type of generic tools is that you trade development time for execution speed, but we like to stick by the old "Make it work first, then optimize later" philosophy.
+
 ### Flags
 
 The database class has several flags which you may find useful.
@@ -287,14 +289,18 @@ A model file looks something like the following:
 	class templateclass extends ModelBase
 	{
 		public static	$DESC		=	[
-			'flags'			=>	0,
-			'uniqueids'	=>	['phonenumber', 'place'],
+			'numsuids'	=> 1,
+			'flags'			=> 0,
+			'uniqueids'		=>	['phonenumber', 'place'],
 			'fields'		=>	[
 				'phonenumber'		=>	['TEXT NOT NULL'],
-				'place'					=>	['TEXT NOT NULL'],
+				'place'				=>	['TEXT NOT NULL'],
 				'timestamp'			=>	['INT32 NOT NULL'],
 				'ipaddress'			=>	['INT32 NOT NULL'],
-				'flags'					=>	['INT32 NOT NULL'],
+				'flags'				=>	['INT32 NOT NULL'],
+			],
+			'indexes'				=>	[
+				['INDEX', 'ids'],
 			],
 		];
 	}
@@ -335,11 +341,13 @@ The main definition is found in the static variable $DESC. This can have the fol
 	
 	It is quite possible for a model to have all three ways of identifying, in which case the database will first use the unique IDs, then try to use the SUIDs, then finally use the AUTO_INCREMENT ID.
 	
+	Note that using unique IDs automatically creates an unique index for the fields in the database as well for efficiency.
+	
 + fields
 
 	The fields is the real definition of the SQL CREATE TABLE statement. It contains an array whose keys are the field names and the values are the field definitions. The definitions are an array in the form [type, validator, extra] with only the type required.
 	
-	Available types are the common SQL types INT, NUMERIC, TEXT, BLOB along with some custom Paferalib types:
+	Available types are the common SQL types INT, FLOAT, TEXT, BLOB along with some custom Paferalib types:
 	
 	+ DATETIME
 	
@@ -357,7 +365,255 @@ The main definition is found in the static variable $DESC. This can have the fol
 	
 		Stored as an INT32 index to the real translations table in h_translations. Automatically loaded by the database at run-time to the field name plus a "s." For example, the field "username" would result in the translations array being stored in "usernames."
 		
+	+ SINGLETEXT, MULTITEXT
 	
+		Text that should be only one single line long or will take up multiple lines. Used in HTML forms to indicate whether this should be a plain <input type="text"> or a <textarea> tag.
+		
+	+ PASSWORD
+	
+		Text that should not be shown outside of the system by any means. The JSON DB API automatically stores such fields as having the value "[hidden]."
 
+	+ PRIVATE
+	
+		Adding this keyword will ensure that these variables will not be readable by anyone except administrators.
+		
+	+ PROTECTED
+	
+		Adding this keyword will ensure that these variables will not be readable by anyone except those who have the DB::VIEW_PROTECTED permission.
 
++ indexes
+
+	This is an array which allows you to specify individual indexes to be created for the table. It takes the form [indextype, indexfields] where indexfields is a string containing field names separated by commas.
+	
+	For tables which are frequently queried, indexes can dramatically improve performance, but for tables which are frequently written to or updated, indexes can dramatically lower performance. It's suggested that you test your tables both with indexes and without indexes to find the best fit.
+	
+### Operations
+
+#### CREATE TABLE
+
+You typically will not need to issue a CREATE TABLE statement yourself unless your table is rather complicated. A model named test_user will result in a table called test_users being automatically created on first use.
+
+#### $D->Create()
+
+To create an object, simply pass its name to the $D->Create() method. The class will be autoloaded, initialized with default values, and returned to you.
+
+	$obj	= $D->Create($model);
+
+You should not create new models using the PHP new keyword unless you manually initialize the fields yourself using $D->ImportFields(). If you have not setup correct validators, it's quite possible for bad data to be written into your database when you try to save your object.
+
+#### SELECT
+
+##### $D->Load(), $D->LoadMany()
+
+Like most database abstraction layers, Paferalib has two ways to get an object: load it by ID or find it by criteria.
+
+Loading an object can be done in many ways depending on the type of ID used.
+
+	# Load by SUID
+	$obj	= $D->Load('test_loginattempt', $suid1);
+	
+	# Load by named array
+	$obj	= $D->Load('test_loginattempt', ['suid1' => $suid1]);
+	
+	# Load by unique IDs
+	$obj	= $D->Load(
+		'test_loginattempt', 
+		[
+			'phonenumber' => $phonenumber,
+			'place'			=> $place,
+		]
+	);
+
+All of these will produce a test_loginattempt object stored in $obj, throwing an exception if the current user does not have the view permission or if the object could not be found.
+
+For efficiency, it is also possible to specify which fields to load and to provide an object to load into:
+
+	# Load only phonenumber
+	$obj	= $D->Load('test_loginattempt', $suid1, 'phonenumber');
+
+	# Load into existing object
+	$D->Load('test_loginattempt', $suid1, '', $obj);
+
+If you have a list of IDs, it is possible to load them all at once
+
+	# Loading from an array of IDs
+	$objs	= $D->LoadMany('test_loginattempt', $ids);
+	
+but this is inefficient. Since Paferalib does not know in advance what type of search to perform for each row, it results in a query for every object. You should perform the load yourself for greatest performance using a WHERE clause. 
+
+##### $D->Find()
+
+Finding an object is probably about 99% of what most people use SQL for, and also can be the most complicated operation to do once you start doing JOINs and subselects and all of those fun features that DBAs specialize at.
+
+Paferalib has portability and ease of use as two of its goals, so we do *not* include any database-specific functions. We use SQLite as a baseline, meaning that if it can be done in SQLite, it can probably be done in every other database as well. For most people, this won't make much of a difference, but if your app has performance-critical parts, you can always use a direct query with $D->Query() to optimize for your particular database. CREATE VIEW and the database's native query cache can also help for frequently used queries.
+
+	# Simplest form returns all rows
+	$objs	= $D->Find('test_loginattempt')->All();
+	
+	# Using a WHERE clause with parameters is the normal use
+	$objs	= $D->Find(
+		'test_loginattempt', 
+		'WHERE phonenumber = ?', 
+		$phonenumber
+	)->All();
+
+	# ORDER BY can be written straight into the WHERE clause
+	$objs	= $D->Find(
+		'test_loginattempt', 
+		'WHERE phonenumber = ?
+		ORDER BY phonenumber', 
+		$phonenumber
+	)->All();
+	
+	# but LIMIT should be put into the options array due to chunking
+	$objs	= $D->Find(
+		'test_loginattempt', 
+		'WHERE phonenumber = ?
+		ORDER BY phonenumber', 
+		$phonenumber,
+		[
+			'start'	=> 100,
+			'limit'	=> 100
+		]
+	)->All();
+
+###### DBResult
+
+Like regular PDO queries return a SQL cursor, $D->Find() returns a DBResult class. The most commonly used style is to use a foreach loop to iterate over each row that $D->Find() returns, and DBResult is designed to support exactly such a use.
+
+	foreach ($D->Find(
+			'test_loginattempt', 
+			'WHERE phonenumber = ?
+			ORDER BY phonenumber', 
+			$phonenumber,
+			[
+				'start'	=> 100,
+				'limit'	=> 100
+			]
+		) as $r
+	)
+	{
+		print $r->phonenumber;
+	}
+	
+DBResult natively supports chunking, or reading a portion of rows at a time for processing to save memory. This means that if your database returns a million rows, DBResult will first fetch rows 0-999, then rows 1000-1999, and so forth. The chunk size defaults to 1000, and can be set using the 'chunksize' option.
+
+DBResult also supports caching the returned objects to the webserver, thus vastly improving performance for subsequent queries with the same parameters. This can be enabled by setting the 'cachesize' option to the number of rows that you wish to be cached. The next time that you run the same query, DBResult will check to see if the number of rows in the table has changed. If the count is still the same, your objects will be loaded from disk rather than having to make another trip to the database server. 
+
+Like $D->Load(), $D->Find() supports retrieving only specific fields from the database to save processing time. You can set these as a string with each field separated by a comma in the 'fields' option.
+
+It's also possible to retrieve only objects with certain permissions. For example, if you only wish to get objects which you have permission to change, you can set 'access' to DB::CAN_CHANGE and DBResult will return only those objects.
+
+The top mistake to make with DBResult is that it will not return all of the rows of your database by default. Instead, it will only return the first 1000 rows, which saves a lot of processing for most common operations. If you wish to get rows past the first 1000, make sure to set the 'limit' option to a large number.
+
+Because of security, chunking, and the processing limit, getting a precise count from DBResult when you have a secure model is only possible if you retrieve *all* rows and then manually count how many rows you have. For secure models, it's quite possible that certain rows are not viewable by your user and thus will be skipped over. Models without security do not have this issue since all of their rows are public.
+
+##### ModelBase
+
+All Paferalib models must inherit from ModelBase in order to receive variable tracking and validation capabilities. 
+
+###### Method forwarding and chaining
+
+ModelBase keeps track of which database this object came from and will forward most methods to that database. These methods are also normally chainable, so instead of doing
+
+	$obj	= $D->Create('model');
+	$obj->Set(['property' => 'foo']);
+	$D->Insert($obj);
+	
+You could write the equivalent as
+
+	$D->Create('model')->Set(['property' => 'foo'])->Insert();
+
+###### Setting properties
+
+It's important that you remember that properties cannot be set directly as in
+
+	$model->property = 'foo';
+	
+but must be set using the ModelBase->Set() method
+
+	$model->Set(['property' => 'foo']);
+	
+While this will seem awkward, ModelBase->Set() will keep track of which variables have changed and which variables have not. When it's time to update the object, calling ModelBase->Save() will result in a no-op if nothing has changed.
+
+An additional benefit is that if you have setup your validators correctly, searching for, loading, and updating an object from a POST request can be as simple as
+
+	$D->Create('model')->Set($_REQUEST)->Replace();
+	
+Most objects will require more processing than this, but for models which do not require advanced validation, this can be very convenient.
+
+###### Useful methods
+
+ModelBase has several useful methods which you might find yourself using from time to time.
+
++ ModelBase->ToArray()
+
+	Returns all of the properties and values as an array. This method respects properties marked as PRIVATE or PROTECTED.
+
++ ModelBase->ToJSON()
+
+	Returns all of the properties and values as an array for conversion to and from JSON. 
+
++ ModelBase->Changed()
+
+	Returns whether this object has been changed.
+	
++ ModelBase->OnLoad(), ModelBase->OnSave(), ModelBase->OnDelete(), ModelBase->PostSave()
+
+	Processing hooks called whenever their named events occur for further functionality. These come in handy if you're dealing with hierarchical trees or other special data structures which SQL does not cope with very easily.
+	
++ ModelBase->CanChange(), ModelBase->CanDelete()
+
+	Convenience functions for checking what the current user can do.
+	
+##### $D->Save(), $D->Insert(), $D->Update(), $D->Replace()
+
+One of the main frustrations with SQL is to decide what to do when you're trying to insert a row with the same ID as an existing row. The MySQL REPLACE keyword does a lot to help with this situation, ut unfortunately is not supported by all databases, and thus not includable in Paferalib.
+
++ $D->Save() 
+
+	This is the backend function to all of the other methods. This should not be called directly unless you're sure of what you're doing.
+
++ $D->Insert() 
+
+	This will do the same thing as the SQL INSERT INTO clause, and will fail if a row exists with the same ID.
+
++ $D->Update()
+
+	This will do the same thing as the SQL UPDATE clause, and will do nothing if no row exists with the same ID.
+
++ $D->Replace()
+	
+	As a compromise between the above functions, this method will first search for any existing rows, do an update if it finds one, or does an insert if it doesn't find one. The downside is that these searches take time, and this is substantially slower than calling $D->Insert() or $D->Update() yourself if you know for sure what you need to do.
+	
+With all of these functions, the action of saving an object involves converting all of its properties into formats suitable for the database, calling any necessary validators, and then sending the command to the database itself. All of these can result in exceptions being thrown, so be sure to wrap any save operations in an exception handler.
+
+Any special handling for a model can be done by defining the functions ModelBase->OnSave() for before the save is done and ModelBase->PostSave() for after the save is done. If you want to convert any special types or launch any hooks, this is the place to do it.
+
+##### $D->Delete()
+
+In its simplest form, $D->Delete() will truncate the model's table
+
+	$D->Delete($modelname)
+	
+It can also delete only specific rows
+
+	$D->Delete($modelname, 'WHERE phonenumber = ?', $phonenumber)
+
+Plain and simple is the description for this method.
+
+##### $D->Link(), $D->Linked(), $D->Unlink(), $D->UnlinkMany()
+
+Paferalib natively supports linking objects to each other in a many-to-many relationship. These links can have a type, an order, and a comment as to what the purpose of the link is. It's not uncommon to see code like
+
+	$bob	= $D->Find('user', 'WHERE username = ?', 'Bob')[0];
+	$tom	= $D->Find('user', 'WHERE username = ?', 'Tom')[0];
+	$jane	= $D->Find('user', 'WHERE username = ?', 'Jane')[0];
+	$mary	= $D->Find('user', 'WHERE username = ?', 'Mary')[0];
+
+	$bob->Link($tom, BOSS);
+	$bob->Link([$jane, $mary], EMPLOYEES);
+	
+	var_dump($bob->Linked('user', BOSS)); # Returns $tom
+	var_dump($bob->Linked('user', EMPLOYEES)); # Returns [$jane, $mary] in that order
 	
