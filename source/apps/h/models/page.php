@@ -298,7 +298,8 @@ EOT;
 	<a href="{$R->baseurl}learn/index">{$T_MAIN[3]}</a>
 	<a href="{$R->baseurl}buy/index">{$T_MAIN[4]}</a>
 	<a href="https://shop58113505.taobao.com/" data-nointercept=1>{$T_MAIN[11]}</a>
-	<a href="{$R->baseurl}sanya/index">{$T_MAIN[12]}</a>
+	<a href="{$R->baseurl}projects/index">Projects</a>
+	<a href="{$R->baseurl}sanya/index">An American's Guide to Sanya</a>
 EOT;
 	}
 

@@ -23,7 +23,7 @@ function IsNumber(param) {return ValidString(param, NUMBERS);}
 function IsLower(param) {return ValidString(param, LOWERCASE);}
 function IsUpper(param) {return ValidString(param, UPPERCASE);}
 function IsAlpha(param) {return ValidString(param, LOWERCASE + UPPERCASE);}
-function IsAlphanum(param) {return ValidString(param, LOWERCASE + UPPERCASE + NUMBERS);}
+function IsAlphaNum(param) {return ValidString(param, LOWERCASE + UPPERCASE + NUMBERS);}
 
 // ====================================================================
 // Shamelessly stolen from AngularJS
@@ -64,7 +64,7 @@ function Merge()
 
 // ====================================================================
 // Thanks to http://stackoverflow.com/questions/7486085/copying-array-by-value-in-javascript
-function DeepCopy(o)
+function Clone(o)
 {
    var out, v, key;
    out = Array.isArray(o) ? [] : {};
@@ -305,14 +305,62 @@ function NestObjects()
 	return o;
 }
 
+// =====================================================================
+// Sorts a JavaScript object based upon its keys and returns a sorted
+// array of [value, key] pairs. level1 and level2 allow sorting based
+// upon a key such as obj['animals']['birds']['parrots']
+function SortArray(obj, ignorecase, level1, level2)
+{
+	var sorted	=	[];
+	var	key			=	null;
+
+	for (var k in obj)
+	{
+		if (obj[k])
+		{
+			if (level2)
+			{
+				key	=	obj[k][level1][level2];
+			} else if (level1)
+			{
+				key	=	obj[k][level1];
+			} else
+			{
+				key	=	obj[k];
+			}
+		
+			if (key == undefined)
+				continue;
+		
+			if (key && ignorecase)
+				key	=	key.toString().toLowerCase();
+
+			sorted.push([k, key]);
+		}
+	}
+
+	sorted.sort(
+		function(a, b)
+		{
+			if (a[1] == b[1])
+				return 0;
+
+			return (a[1] > b[1]) ? 1 : -1;
+		}
+	);
+
+	return sorted;
+}
+
 // ====================================================================
 // Thanks to http://planetozh.com/blog/2008/04/javascript-basename-and-dirname/
-function basename(path)
+function Basename(path)
 {
 	return path.replace(/\\/g,'/').replace( /.*\//, '' );
 }
 
-function dirname(path)
+// ====================================================================
+function Dirname(path)
 {
 	return path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');;
 }
@@ -391,7 +439,7 @@ function Shuffle(a)
 }
 
 // ====================================================================
-function strcmp(a, b, ignorecase)
+function Strcmp(a, b, ignorecase)
 {
 	if (ignorecase)
 	{
@@ -482,3 +530,51 @@ function ToParams(data)
 	}
 	return params.join("&");
 }
+
+// ====================================================================
+function InRect(x, y, rect)
+{
+	if (!rect)
+		return 0;
+
+	return (rect.left <= x
+		&& x <= rect.right
+		&& rect.top <= y
+		&& y <= rect.bottom);
+}
+
+// ====================================================================
+function SetCookie(name, value, numdays, path, domain, secure)
+{
+	path	=	path || '/';
+
+	var now = new Date();
+
+	if (numdays)
+		numdays = numdays * 1000 * 60 * 60 * 24;
+
+	var expirationdate = new Date(now.getTime() + numdays);
+
+	document.cookie = name + '=' + escape(value)
+		+ (numdays ? ';expires=' + expirationdate.toGMTString() : '' )
+		+ ';path=' + path
+		+ (domain ? ';domain=' + domain : '')
+		+ (secure ? ';secure' : '');
+}
+
+// ====================================================================
+function Emit(element, event)
+{
+	if (document.createEvent)
+	{
+		var evt = document.createEvent("HTMLEvents");
+		evt.initEvent(event, true, true);
+		return !element.dispatchEvent(evt);
+	} else {
+		var evt = document.createEventObject();
+		return element.fireEvent('on' + event, evt)
+	}
+}
+
+
+

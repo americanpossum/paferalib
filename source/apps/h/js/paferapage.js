@@ -111,6 +111,23 @@ P	=	{
 	},
 
 	// --------------------------------------------------------------------
+	Icon: function(name, app, classes, size)
+	{
+		classes	= classes || 'LineHeight';
+		size		= size		|| '3';
+	
+		return '<img class="' + classes + '" src="' + P.IconURL(name, app) + '" style="width: ' + size + 'em; height: ' + size + 'em" />';
+	},
+
+	// --------------------------------------------------------------------
+	IconURL: function(name, app)
+	{
+		app	= app || P.currentapp;
+	
+		return P.baseurl + 'i/' + app + '/icons.svg#' + name;
+	},
+
+	// --------------------------------------------------------------------
 	Target: function(e)
 	{
 		e = e || window.event;
@@ -299,7 +316,7 @@ P	=	{
 				'</div>'
 			].join('\n'));
 		
-			P.ScrollTo(el);
+			//P.ScrollTo(el);
 		}
 	},
 
@@ -636,21 +653,24 @@ P	=	{
 		if (top < viewportrect.top)
 			top	=	viewportrect.top;
 	
-		popup.set({
-				'$left':		parentrect.left + 'px',
-				'$top':			parentrect.top + 'px',
-				'$width':		parentrect.width + 'px',
-				'$height':	parentrect.height + 'px'
-			}).show()
-			.animate(
-				{
-					'$left':		left + 'px',
-					'$top':			top + 'px',
-					'$width':		options['$width'],
-					'$height':	'auto'
-				}, 
-				300
-			);
+		if (!options['noanimate'])
+		{
+			popup.set({
+					'$left':		parentrect.left + 'px',
+					'$top':			parentrect.top + 'px',
+					'$width':		parentrect.width + 'px',
+					'$height':	parentrect.height + 'px'
+				}).show()
+				.animate(
+					{
+						'$left':		left + 'px',
+						'$top':			top + 'px',
+						'$width':		options['$width'],
+						'$height':	'auto'
+					}, 
+					300
+				);
+		}
 		
 		if (options.closeonmouseout)
 		{
@@ -679,7 +699,7 @@ P	=	{
 		{
 			var rt	=	P.AbsoluteRect(elements[i]);
 
-			if (P.InRect(P.mousex, P.mousey, rt))
+			if (InRect(P.mousex, P.mousey, rt))
 			{
 				inrects	=	1;
 				break;
@@ -766,9 +786,10 @@ P	=	{
 	{
 		P.MessageBox(
 			[
-				'<div class="Pad100 Error">',
-					'<img src="/i/h/icons/caution.png" class="FloatLeft Padded">',
-					'<span class=ErrorPopupMsg>' + content + '</span>',
+				'<div class="Pad50 Error">',
+					P.Icon('Warning', 'h', 'FloatLeft Pad50', '4'),
+					'<div class=ErrorPopupMsg>' + content + '</div>',
+					'<div class=Cleared></div>',
 				'</div>',
 				'<br class=Cleared>'
 			],
@@ -1099,9 +1120,9 @@ P	=	{
 	},
 
 	// --------------------------------------------------------------------
-	EditThis: function(el, onsuccess, fields)
+	EditThis: function(selector, onsuccess, fields)
 	{
-		el	=	$(el);
+		var el	=	$(selector);
 
 		if (fields)
 		{
@@ -1526,23 +1547,6 @@ P	=	{
 	},
 
 	// --------------------------------------------------------------------
-	Icon: function(name, app, classes, size)
-	{
-		classes	= classes || 'LineHeight';
-		size		= size		|| '3';
-	
-		return '<img class="' + classes + '" src="' + P.IconURL(name, app) + '" style="width: ' + size + 'em; height: ' + size + 'em" />';
-	},
-
-	// --------------------------------------------------------------------
-	IconURL: function(name, app)
-	{
-		app	= app || P.currentapp;
-	
-		return P.baseurl + 'i/' + app + '/icons.svg#' + name;
-	},
-
-	// --------------------------------------------------------------------
 	SortableTDs: function()
 	{
 		return [
@@ -1814,7 +1818,7 @@ P	=	{
 	},
 
 	// --------------------------------------------------------------------
-	MakeSortableTable: function(selector)
+	MakeSortableTable: function(selector, onchangefunc)
 	{
 		$(selector).on(
 			'click',
@@ -1832,15 +1836,24 @@ P	=	{
 				if (!src)
 					return;
 				
-				if (src.indexOf('Cancel') != -1)
+				if (src.indexOf('#Cancel') != -1)
 				{
 					thistr.remove();
-				} else if (img.is('.FlipV'))
+				
+					if (onchangefunc)
+						onchangefunc(selector);
+				} else if (src.indexOf('#Down') > -1)
 				{
-					P.MoveUp(thistr);
-				} else 
-				{
-					P.MoveDown(thistr);
+					if (img.is('.FlipV'))
+					{
+						P.MoveUp(thistr);
+					} else 
+					{
+						P.MoveDown(thistr);
+					}
+				
+					if (onchangefunc)
+						onchangefunc(selector);
 				}
 			}
 		);
@@ -1926,13 +1939,19 @@ P	=	{
 			P.screensize	=	'large';
 		}
 	
-		$("#ScreenSizeStylesheet").set("@href", P.baseurl + "c/h/" + P.screensize + ".css");
+		$("#ScreenSizeStylesheet").set("@href", P.CSSURL(P.screensize, 'h'));
 
 		if (P.wallpaper)
-			$('body').set('$backgroundImage', "url('/i/h/wallpapers/" + P.wallpaper + "-" + P.screensize + ".jpg')");
+		{
+			$('body').set(
+				'$backgroundImage', 
+				"url('" + P.ImageURL('wallpapers/' + P.wallpaper + "-" + P.screensize + '.jpg', 'h') + "')");
+		}
 
 		if (P.texttheme)
-			$('#TextThemeStylesheet').set('@href', '/c/h/themes/' + P.texttheme + '.css');
+		{
+			$('#TextThemeStylesheet').set('@href', P.CSSURL('themes/' + P.texttheme, 'h'));
+		}
 		
 		if (!IsEmpty(P.events.resize))
 		{
@@ -1946,6 +1965,9 @@ P	=	{
 	},
 
 	// =====================================================================
+	// Converts dotted name and value pairs such as animals.lions.number = 5
+	// into animals['lions']['number']	= 5. Useful for form elements when
+	// you want to convert them to a JSON array.
 	StoreInArray: function(ls, name, value)
 	{
 		var nameparts	=	name.split('.');
@@ -2083,57 +2105,13 @@ P	=	{
 	},
 
 	// =====================================================================
-	DeleteParent: function(parentselector, e)
+	DeleteParent: function(parentselector, selector)
 	{
-		$(e).up(parentselector).remove();
-	},
-
-	// =====================================================================
-	SortArray: function(obj, lowercase, level1, level2)
-	{
-		var sorted	=	[];
-		var	key			=	null;
-
-		for (var k in obj)
-		{
-			if (obj[k])
-			{
-				if (level2)
-				{
-					key	=	obj[k][level1][level2];
-				} else if (level1)
-				{
-					key	=	obj[k][level1];
-				} else
-				{
-					key	=	obj[k];
-				}
-			
-				if (key == undefined)
-					continue;
-			
-				if (key && lowercase)
-					key	=	key.toString().toLowerCase();
-
-				sorted.push([k, key]);
-			}
-		}
-
-		sorted.sort(
-			function(a, b)
-			{
-				if (a[1] == b[1])
-					return 0;
-
-				return (a[1] > b[1]) ? 1 : -1;
-			}
-		);
-
-		return sorted;
+		$(selector).up(parentselector).remove();
 	},
 
 	// ====================================================================
-	MakeToggleNext: function(selector)
+	MakeAccordion: function(selector)
 	{
 		$(selector).each(
 			function(item, index)
@@ -2147,7 +2125,7 @@ P	=	{
 			
 				next.hide();
 
-				self.set('+HoverHighlight');
+				self.set('+HoverHighlight +Accordion');
 				self.add(HTML(P.Icon('Arrow', 'h', 'FlipV ToggleIcon', 2.5)));
 
 				next.add(
@@ -2159,13 +2137,17 @@ P	=	{
 			}
 		);
 		
-		P.OnClick(selector, LBUTTON, P.ToggleNext);
+		P.OnClick(selector, LBUTTON, P.OnAccordion);
 	},
 
 	// ====================================================================
-	ToggleNext: function(e, el)
+	OnAccordion: function(e)
 	{
-		var self	=	$(el);
+		var self	=	P.Target(e);
+	
+		if (!self.is('.Accordion'))
+			self	= self.up('.Accordion');
+	
 		var next	=	self.next();
 		var toggleicon	=	$('.ToggleIcon', self);
 		var isvisible		=	toggleicon.is('.FlipV');
@@ -2180,30 +2162,21 @@ P	=	{
 			toggleicon.set('+FlipV');
 		}
 	},
-
+	
 	// ====================================================================
-	ToggleThis: function(e)
+	SortChildrenByText: function(selector, children1, children2)
 	{
-		var self			=	$(e).up();
-		var prev			=	$(self.trav('previousSibling')[0]);
-
-		self.hide();
-		$('.ToggleIcon', prev).set('@src', P.baseurl + 'i/h/icons/down.png');
-	},
-
-	// ====================================================================
-	SortChildrenByText: function(selector, childrentosort, childrentosortby)
-	{
-		childrentosortby	=	childrentosortby	||	'';
+		children1	=	children1	||	'';
+		children2	=	children2	||	'';
 
 		var	parent		=	$(selector);
-		var	children	=	parent.children(childrentosort).get();
+		var	children	=	parent.children(children1).get();
 
 		children.sort(
 			function(a, b)
 			{
-				var texta = $(a).find(childrentosortby).text().toLowerCase();
-				var textb = $(b).find(childrentosortby).text().toLowerCase();
+				var texta = $(a).find(children2).text().toLowerCase();
+				var textb = $(b).find(children2).text().toLowerCase();
 				return (texta < textb) ? -1 : (texta > textb) ? 1 : 0;
 			}
 		);
@@ -2238,30 +2211,42 @@ P	=	{
 			LBUTTON,
 			function(e)
 			{
-				var self		=	P.Target(e);
+				var self			=	P.Target(e);
+				var newstate	= 'on';
 			
 				switch (self.get('%toggled'))
 				{
 					case 'on':
 						if (tritoggle)
 						{
-							self.set('%toggled', 'off').set('+dredg -lgrayg -lgreeng');
+							newstate	= 'off';
 						} else
 						{
-							self.set('%toggled', 'unset').set('-dredg +lgrayg -lgreeng');
+							newstate	= 'unset';
 						}
 						break;
 					case 'off':
-						self.set('%toggled', 'unset').set('-dredg +lgrayg -lgreeng');
+						newstate	= 'unset';
 						break;
 					default:
-						self.set('%toggled', 'on').set('-dredg -lgrayg +lgreeng');
+						newstate	= 'on';
 				};
+			
+				if (newstate == 'on')
+				{
+					self.set('-dredg -lgrayg +lgreeng');
+				} else if (newstate == 'off')
+				{
+					self.set('+dredg -lgrayg -lgreeng');
+				} else
+				{
+					self.set('-dredg +lgrayg -lgreeng');
+				}
 				
 				var ontoggle	= self.get('%ontoggle');
 			
 				if (ontoggle)
-					window[ontoggle](e, self);
+					window[ontoggle](e, self, newvalue);
 			}
 		);
 	},
@@ -2269,19 +2254,12 @@ P	=	{
 	// ====================================================================
 	ToggledButtons: function(selector)
 	{
-		var ls = {
-			'on':			[],
-			'off':		[],
-			'unset':	[]
-		};
-
 		$(selector).each(
 			function(item, index, context)
 			{
 				var self	=	$(item);
-				var value	=	self.get('%value');
 
-				ls[self.get('%toggled')].push(self.text());
+				ls[self.get('%name')]	= self.get('%toggled');
 			}
 		);
 
@@ -2314,7 +2292,7 @@ P	=	{
 			
 			if (l > 8)
 			{
-				ls.push('<option value="' + EncodeEntities(item[1]) + '">' + item[0] + '</option>');
+				ls.push('<option value="' + EncodeEntities(item[1]) + '" ' + (item[2] ? 'selected' : '') + '>' + item[0] + '</option>');
 			} else
 			{
 				ls.addtext([
@@ -2400,6 +2378,44 @@ P	=	{
 		);
 	},
 	
+	// ====================================================================
+	AJAX: function(url, data, settings)
+	{
+		var defaults	=	{
+			method:		'get',
+			timeout:	15,
+		};
+
+		settings	=	Merge(defaults, settings || {});
+
+		if (settings.method == 'get' && data)
+			url	+=	'?' + ToParams(data);
+
+		var p = _.promise();
+
+		var r	=	new XMLHttpRequest();
+
+		r.open(settings.method, url);
+
+		// Convert to seconds
+		r.timeout	=	settings.timeout * 1000;
+
+		r.addEventListener("load", function() { p.fire(true, [r, 'loaded']) });
+		r.addEventListener("error", function() { p.fire(false, [r, 'error']); });
+		r.addEventListener("abort", function() { p.fire(false, [r, 'aborted']); });
+		r.addEventListener("timeout", function() { p.fire(false, [r, 'timeout']); });
+
+		if (settings.method == 'post' && data)
+		{
+			r.send(data);
+		} else
+		{
+			r.send();
+		}
+
+		return p;
+	},
+
 	// =====================================================================
 	API: function(command, data, onsuccess, options)
 	{
@@ -2429,9 +2445,11 @@ P	=	{
 
 				if (!data)
 				{
+					P.Debug('P.API: No JSON returned! ' + r.statusText + ': ' + r.response);
 					throw new Error('P.API: No JSON returned! ' + r.statusText + ': ' + r.response);
 				} else if (data.error && options.handleerror)
 				{
+					P.Debug('P.API: ' + data.error);
 					throw new Error('P.API: ' + data.error);
 				} else
 				{
@@ -2521,7 +2539,7 @@ P	=	{
 	},
 
 	// ====================================================================
-	ChangeWallpaper: function(filename, nocheck)
+	SetWallpaper: function(filename, nocheck)
 	{
 		var parts	=	filename.split('-');
 	
@@ -2544,44 +2562,6 @@ P	=	{
 				window.location.reload(1);
 			}
 		);
-	},
-
-	// ====================================================================
-	AJAX: function(url, data, settings)
-	{
-		var defaults	=	{
-			method:		'get',
-			timeout:	15,
-		};
-
-		settings	=	Merge(defaults, settings || {});
-
-		if (settings.method == 'get' && data)
-			url	+=	'?' + ToParams(data);
-
-		var p = _.promise();
-
-		var r	=	new XMLHttpRequest();
-
-		r.open(settings.method, url);
-
-		// Convert to seconds
-		r.timeout	=	settings.timeout * 1000;
-
-		r.addEventListener("load", function() { p.fire(true, [r, 'loaded']) });
-		r.addEventListener("error", function() { p.fire(false, [r, 'error']); });
-		r.addEventListener("abort", function() { p.fire(false, [r, 'aborted']); });
-		r.addEventListener("timeout", function() { p.fire(false, [r, 'timeout']); });
-
-		if (settings.method == 'post' && data)
-		{
-			r.send(data);
-		} else
-		{
-			r.send();
-		}
-
-		return p;
 	},
 
 	// ====================================================================
@@ -2614,6 +2594,7 @@ P	=	{
 			return;
 	
 		P.currenturl	=	url;
+		
 		if (!contentonly || !P.useadvanced)
 		{
 			P.LoadingDialog();
@@ -2648,12 +2629,18 @@ P	=	{
 
 				P.AJAX(
 					url,
-					{contentonly:	true},
+					{contentonly:	1},
 					{timeout:	10000}
 				).then(
 					function(r)
 					{
-						d	=	$.parseJSON(r.response);
+						try
+						{
+							d	=	$.parseJSON(r.response);
+						} catch (e)
+						{
+							d.error	= e;
+						}
 
 						if (!d)
 						{
@@ -2664,6 +2651,9 @@ P	=	{
 						} else
 						{
 							contentdiv[0].innerHTML	=	d.content;
+						
+							if (title)
+								document.title	= title;
 
 							$('script', contentdiv).each(
 								function(item, index, context)
@@ -2687,8 +2677,7 @@ P	=	{
 							history.pushState(d, d.title, url);
 							window.scrollTo(0, 0);
 						}
-					}
-				).error(
+					},
 					function(r, reason)
 					{
 						contentdiv.ht(
@@ -2698,38 +2687,6 @@ P	=	{
 				);
 			}
 		}
-	},
-
-	// ====================================================================
-	CloseTopLayer: function()
-	{
-		// Close popup windows and fullscreens before going to previous page
-		if (P.layerstack.length)
-		{
-			for (;;)
-			{
-				if (!P.layerstack.length)
-					break;
-			
-				var selector	=	P.layerstack.pop();
-				var el				= $(selector);
-			
-				if (!el.length)
-					break;
-			
-				if (selector.indexOf('Popup') > -1)
-				{
-					$(selector).remove();
-				} else
-				{
-					$(selector).ht('').hide();
-				}
-				window.history.back();
-				return 1;
-			}
-		}
-	
-		return 0;
 	},
 
 	// ====================================================================
@@ -2761,7 +2718,7 @@ P	=	{
 	},
 
 	// ====================================================================
-	PageBar: function(count, start, limit, orderby, numonpage, listfunc)
+	PageBar: function(count, start, limit, numonpage, listfunc)
 	{
 		count			=	parseInt(count);
 		start			=	parseInt(start);
@@ -2774,7 +2731,7 @@ P	=	{
 		var	ls	=	[
 			'<div class=Cleared></div>',
 			'<div class=Pad50>',
-				(count ? (start + 1) : 0) + ' - ' + (start + numonpage) + ' / ~' + count,
+				(count ? (start + 1) : 0) + ' - ' + (start + numonpage - 1) + ' / ~' + count,
 			'</div>',
 			'<div class="ButtonBar PageBar">'
 		];
@@ -2783,10 +2740,10 @@ P	=	{
 		{
 			if (start)
 			{
-				ls.push('<a class="FirstPage" onclick="' + listfunc + '(\'' + orderby + '\', 0)">&lt;&lt;</a>');
+				ls.push('<a class="FirstPage" onclick="' + listfunc + '()">&lt;&lt;</a>');
 
 				if (start >= limit)
-					ls.push('<a class="PreviousPage" onclick="' + listfunc + '(\'' + orderby + '\', ' + (start - limit) + ')">&lt;</a>');
+					ls.push('<a class="PreviousPage" onclick="' + listfunc + '(' + (start - limit) + ')">&lt;</a>');
 			}
 
 			var currentpage	=	Math.floor(start / limit);
@@ -2804,20 +2761,20 @@ P	=	{
 				var startnum	=	i * limit;
 
 				if (startnum != start)
-					ls.push('<a onclick="' + listfunc + '(\'' + orderby + '\', ' + startnum + ')">' + startnum + '</a>');
+					ls.push('<a onclick="' + listfunc + '(' + startnum + ')">' + startnum + '</a>');
 			}
 
 			if (start + limit < count)
 			{
 				if (start + limit < count - limit)
-					ls.push('<a class="NextPage" onclick="' + listfunc + '(\'' + orderby + '\', ' + (start + limit) + ')">&gt;</a>');
+					ls.push('<a class="NextPage" onclick="' + listfunc + '(' + (start + limit) + ')">&gt;</a>');
 
-				ls.push('<a class="LastPage" onclick="' + listfunc + '(\'' + orderby + '\', ' + (Math.ceil((count - limit) / limit) * limit) + ')">&gt;&gt;</a>');
+				ls.push('<a class="LastPage" onclick="' + listfunc + '(' + (Math.ceil((count - limit) / limit) * limit) + ')">&gt;&gt;</a>');
 			}
 		}
 
 		if (numpages > 16)
-			ls.push('<a class=ChoosePage onclick="P.ChoosePage(\'' + orderby + '\', ' + start + ', ' + limit + ', ' + count + ', \'' + listfunc + '\')">' + T[34] + '</a>');
+			ls.push('<a class=ChoosePage onclick="P.ChoosePage(' + start + ', ' + limit + ', ' + count + ', \'' + listfunc + '\')">' + T[34] + '</a>');
 
 		ls.push('</div>');
 		ls.push('<div class=Cleared></div>');
@@ -2826,7 +2783,7 @@ P	=	{
 	},
 
 	// ====================================================================
-	ChoosePage: function(orderby, start, limit, count, listfunc)
+	ChoosePage: function(start, limit, count, listfunc)
 	{
 		var currentpage	=	Math.floor(start / limit) + 1;
 		var numpages		=	Math.ceil(count / limit);
@@ -2837,7 +2794,7 @@ P	=	{
 			],
 			function()
 			{
-				P.GotoPage(orderby, limit, listfunc);
+				P.GotoPage(limit, listfunc);
 			}
 		);
 	
@@ -2845,7 +2802,7 @@ P	=	{
 			'.pagenum',
 			function()
 			{
-				P.GotoPage(orderby, limit, listfunc);
+				P.GotoPage(limit, listfunc);
 			}
 		);
 
@@ -2861,11 +2818,11 @@ P	=	{
 	},
 
 	// ====================================================================
-	GotoPage: function(orderby, limit, listfunc)
+	GotoPage: function(limit, listfunc)
 	{
 		var start	=	limit * (parseInt($$('.pagenum').value) - 1);
 		P.ClosePopup();
-		window[listfunc](orderby, start, limit);
+		window[listfunc](start, limit);
 	},
 
 	// ====================================================================
@@ -3079,6 +3036,38 @@ P	=	{
 	},
 
 	// ====================================================================
+	CloseTopLayer: function()
+	{
+		// Close popup windows and fullscreens before going to previous page
+		if (P.layerstack.length)
+		{
+			for (;;)
+			{
+				if (!P.layerstack.length)
+					break;
+			
+				var selector	=	P.layerstack.pop();
+				var el				= $(selector);
+			
+				if (!el.length)
+					break;
+			
+				if (selector.indexOf('Popup') > -1)
+				{
+					$(selector).remove();
+				} else
+				{
+					$(selector).ht('').hide();
+				}
+				window.history.back();
+				return 1;
+			}
+		}
+	
+		return 0;
+	},
+
+	// ====================================================================
 	EnterFullScreen: function(num, classes, contentlist)
 	{
 		num	=	parseInt(num);
@@ -3119,6 +3108,9 @@ P	=	{
 	// ====================================================================
 	ShowDrawer: function(side, size, classes, contentlist)
 	{
+		side	= side || 'Bottom';
+		size	= size || '2em';
+	
 		var el	=	$('.' + side + 'Drawer');
 	
 		if (classes)
@@ -3184,21 +3176,11 @@ P	=	{
 	},
 
 	// ====================================================================
-	InRect: function(x, y, rect)
+	FlexInput: function(selector)
 	{
-		if (!rect)
-			return 0;
+		selector	= selector	|| '.FlexInput';
 	
-		return (rect.left <= x
-			&& x <= rect.right
-			&& rect.top <= y
-			&& y <= rect.bottom);
-	},
-
-	// ====================================================================
-	FlexInput: function()
-	{
-		$('.FlexInput').each(
+		$(selector).each(
 			function(item, index)
 			{
 				var self	=	$(item);
@@ -3238,38 +3220,6 @@ P	=	{
 
 	// ====================================================================
 	// Thanks to http://techpatterns.com/downloads/javascript_cookies.php
-	SetCookie: function(name, value, numdays, path, domain, secure)
-	{
-		path	=	path || '/';
-
-		var now = new Date();
-
-		if (numdays)
-			numdays = expires * 1000 * 60 * 60 * 24;
-
-		var expirationdate = new Date(now.getTime() + numdays);
-
-		document.cookie = name + '=' + escape(value)
-			+ (numdays ? ';expires=' + expirationdate.toGMTString() : '' )
-			+ ';path=' + path
-			+ (domain ? ';domain=' + domain : '')
-			+ (secure ? ';secure' : '');
-	},
-
-	// ====================================================================
-	Emit: function(element, event)
-	{
-		if (document.createEvent)
-		{
-			var evt = document.createEvent("HTMLEvents");
-			evt.initEvent(event, true, true);
-			return !element.dispatchEvent(evt);
-		} else {
-			var evt = document.createEventObject();
-			return element.fireEvent('on' + event, evt)
-		}
-	},
-
 	// ====================================================================
 	MakeCalendar: function(selector, month, switchmonthfunc, dayclickfunc)
 	{
@@ -3369,7 +3319,19 @@ P	=	{
 		}
 
 		if (dayclickfunc)
-			P.OnClick(selector + ' .Calendar', LBUTTON, dayclickfunc);
+			P.OnClick(
+				selector + ' .Calendar', 
+				LBUTTON, 
+				function(e)
+				{
+					var el	= P.Target(e);
+				
+					if (!el.is('.Day'))
+						el	= el.up('.Day');
+				
+					dayclickfunc(e, el, el.get('%date'))
+				}
+			);
 	},
 
 	// ====================================================================
@@ -3381,7 +3343,7 @@ P	=	{
 			{
 				if (e.keyCode == 13)
 				{
-					func();
+					func(e);
 					return false;
 				}
 			
@@ -3797,7 +3759,7 @@ P	=	{
 	},
 
 	// ====================================================================
-	ChangeWallpaperPopup: function()
+	SetWallpaperPopup: function()
 	{
 		var ls	=	['<div class="Wallpapers">'];
 	
@@ -3806,7 +3768,7 @@ P	=	{
 			var item	=	availablewallpapers[i];
 		
 			ls.push('<img class=HoverHighlight src="' + P.ImageURL('wallpapers/' + item, 'h') 
-				+ '" onclick="P.ChangeWallpaper(\'' + item + '\')">'
+				+ '" onclick="P.SetWallpaper(\'' + item + '\')">'
 			);
 		}
 	
@@ -4670,16 +4632,16 @@ $.ready(
 			);*/
 		}
 
-		P.SetCookie('timeoffset', P.timeoffset);
+		SetCookie('timeoffset', P.timeoffset);
 
-		P.ChangeWallpaper(P.wallpaper + '-' + P.texttheme + '.jpg', 1);
+		P.SetWallpaper(P.wallpaper + '-' + P.texttheme + '.jpg', 1);
 
 		for (var i = 1; i <= 6; i++)
 		{
 			$('.Color' + i).set('$color', 'white !important');
 		}
 
-		P.HoverPopup('.WallpapersMenu', P.ChangeWallpaperPopup);
+		P.HoverPopup('.WallpapersMenu', P.SetWallpaperPopup);
 		P.HoverPopup('.LanguagesMenu', P.ChangeLanguagePopup);
 		P.HoverPopup('.UserMenu', P.UserMenuPopup);
 		P.HoverPopup('.AdminMenu', P.AdminMenuPopup);
@@ -4751,6 +4713,16 @@ $.ready(
 				T_POSSUMBOT[10], 
 				T_POSSUMBOT[11], 
 				P.QuickChangeAvatar
+			);
+
+			P.AddQuickFunc(
+				T_POSSUMBOT[12], 
+				T_POSSUMBOT[12], 
+				T_POSSUMBOT[13], 
+				function() 
+				{ 
+					window.location.href	= P.URL('logout', 'h');
+				}
 			);
 		}
 	

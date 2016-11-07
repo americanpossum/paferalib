@@ -319,7 +319,7 @@ class DB implements ArrayAccess
 	// Keep track of everyone who access the flagged models
 	// Note: The changelog can get large *very* quickly, so use with caution and
 	// only with the most important models!
-	public function TrackAccess($b = 1)
+	public function TrackViews($b = 1)
 	{
 		$this->flags	=	$b ? $this->flags | self::TRACK_VIEW : $this->flags & (~self::TRACK_VIEW);
 		return $this;
@@ -1183,6 +1183,7 @@ COLLATE utf8_unicode_ci;");
 
 			if (FALSE !== strpos($v[0], 'TRANSLATION'))
 			{
+				$obj->$k	=	$hasfield ? intval($fields[$k]) : 0;
 				$varname	= $k . 's';
 				
 				$obj->$varname =	V($fields, $k) 
@@ -1259,12 +1260,12 @@ COLLATE utf8_unicode_ci;");
 				$obj->$k	=	'';
 			}
 		}
-
+	
 		if (($this->flags & DB::SECURE) && ($flags & DB::SECURE))
 		{
 			$obj->dbowner		=	$this->userid ? $this->userid : 1;
 			$obj->dbaccess	=	0;
-			$obj->aclid			=	'';
+			$obj->aclid			=	0;
 		}
 
 		if ($numsuids)
@@ -3165,7 +3166,7 @@ COLLATE utf8_unicode_ci;");
 	}
 
 	// ------------------------------------------------------------------
-	public function SetProp($ls, $propname, $propvalue, $language = 0)
+	public function SetProp($ls, $propname, $propvalue)
 	{
 		if (!$ls || !$propvalue)
 			throw new Exception("DB.SetProp: Missing object or tagname!");
@@ -3173,9 +3174,6 @@ COLLATE utf8_unicode_ci;");
 		if (!is_array($ls))
 			$ls	=	[$ls];
 
-		if (!$language)
-			$language	=	$this->language;
-			
 		$model			=	get_class($ls[0]);
 		$tablename	=	$model::$DESC['table'] . '_props';
 		$idnames		=	$this->GetModelIDs($model, true);
@@ -3226,12 +3224,11 @@ COLLATE utf8_unicode_ci;");
 
 			$values[]	=	$propname;
 			$values[]	=	$propvalue;
-			$values[]	=	$language;
 
 			try
 			{
 				$this->Query(
-					"REPLACE INTO {$tablename}({$idnames}, propname, propvalue, languageid) VALUES({$questionmarks}, ?, ?, ?)",
+					"REPLACE INTO {$tablename}({$idnames}, propname, propvalue) VALUES({$questionmarks}, ?, ?)",
 					$values
 				);
 			} catch (Exception $e)
@@ -3249,14 +3246,13 @@ COLLATE utf8_unicode_ci;");
 					CREATE TABLE IF NOT EXISTS {$tablename}(
 						{$idfields},
 						propname		TEXT NOT NULL,
-						propvalue 	TEXT NOT NULL,
-						languageid	INT NOT NULL,
+						propvalue 	TEXT NOT NULL
 						PRIMARY KEY({$keynames}, propname{$keylength}, propvalue)
 					);
 				");
 
 				$this->Query(
-					"REPLACE INTO {$tablename}({$idnames}, propname, propvalue, languageid) VALUES({$questionmarks}, ?, ?, ?)",
+					"REPLACE INTO {$tablename}({$idnames}, propname, propvalue) VALUES({$questionmarks}, ?, ?)",
 					$values
 				);
 			}
@@ -3264,7 +3260,7 @@ COLLATE utf8_unicode_ci;");
 	}
 
 	// ------------------------------------------------------------------
-	public function GetProp($ls, $propname, $language)
+	public function GetProp($ls, $propname)
 	{
 		if (!$ls || !$tagname)
 			throw new Exception("DB.Tag: Missing object or tagname!");
@@ -3288,8 +3284,7 @@ COLLATE utf8_unicode_ci;");
 			$idquery[]	=	$name . ' = ?';
 		}
 		
-		$idquery[]	=	'languageid = ?';
-		$idquery				=	join(' AND ', $idquery);
+		$idquery	=	join(' AND ', $idquery);
 
 		$results	=	[];
 
@@ -3303,10 +3298,9 @@ COLLATE utf8_unicode_ci;");
 			}
 
 			$values[]	=	$propname;
-			$values[]	=	$language;
 
 			$results[]	=	$this->Query(
-				"SELECT propvalue FROM {$tablename} WHERE {$idquery} AND propname = ? AND languageid = ?",
+				"SELECT propvalue FROM {$tablename} WHERE {$idquery} AND propname = ?",
 				$values
 			)->fetch()['propvalue'];
 		}

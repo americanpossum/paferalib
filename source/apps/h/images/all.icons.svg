@@ -39,9 +39,9 @@
      inkscape:window-height="734"
      id="namedview80"
      showgrid="true"
-     inkscape:zoom="0.405"
-     inkscape:cx="1724.6409"
-     inkscape:cy="58.760717"
+     inkscape:zoom="1.145513"
+     inkscape:cx="3169.1516"
+     inkscape:cy="7.4216757"
      inkscape:window-x="0"
      inkscape:window-y="33"
      inkscape:window-maximized="1"
@@ -739,6 +739,36 @@
        r="6"
        gradientTransform="matrix(1,0,0,1.9194937,0,-11.04951)"
        gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4532"
+       id="linearGradient4324"
+       x1="3.1164358"
+       y1="16.046951"
+       x2="28.881065"
+       y2="16.046951"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.0762667,0,0,1.0261255,0.31306743,-0.09531909)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4532"
+       id="linearGradient4326"
+       gradientUnits="userSpaceOnUse"
+       x1="3.1164358"
+       y1="16.046951"
+       x2="28.881065"
+       y2="16.046951"
+       gradientTransform="matrix(1.0762667,0,0,1.0261255,0.31306743,-0.09531909)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4532"
+       id="linearGradient4328"
+       gradientUnits="userSpaceOnUse"
+       x1="3.1164358"
+       y1="16.046951"
+       x2="28.881065"
+       y2="16.046951"
+       gradientTransform="matrix(1.0762667,0,0,1.0261255,0.31306743,-0.09531909)" />
   </defs>
   <g
      id="layer1">
@@ -1205,37 +1235,118 @@
            id="device-iPhone-smart-phone-vertical-glyph" />
       </g>
     </g>
+    <g
+       transform="matrix(3.4161805,0,0,4.0425836,3196.7271,-14.630512)"
+       style="fill:none;fill-rule:evenodd;stroke:url(#linearGradient4324);stroke-width:1.53635347;stroke-miterlimit:4;stroke-dasharray:none"
+       id="warning">
+      <g
+         style="fill:#000000;stroke:url(#linearGradient4328);stroke-width:1.53635347;stroke-miterlimit:4;stroke-dasharray:none"
+         id="101 Warning">
+        <path
+           inkscape:connector-curvature="0"
+           d="m 14.424233,6.1483927 c 0.870066,-1.4076629 2.282795,-1.4043083 3.150787,0 L 28.36011,23.59738 C 29.521639,25.476595 28.675546,27 26.471407,27 L 5.5278464,27 C 3.3232156,27 2.4738632,25.482664 3.6391433,23.59738 Z M 16,20 c 0.552285,0 1,-0.453036 1,-0.99703 l 0,-6.00594 C 17,12.446386 16.556135,12 16,12 c -0.552285,0 -1,0.453036 -1,0.99703 l 0,6.00594 C 15,19.553614 15.443865,20 16,20 Z m 0,4 c 0.552285,0 1,-0.447715 1,-1 0,-0.552285 -0.447715,-1 -1,-1 -0.552285,0 -1,0.447715 -1,1 0,0.552285 0.447715,1 1,1 z m 0,0"
+           id="Triangle 29"
+           style="stroke:url(#linearGradient4326);stroke-width:1.53635347;stroke-miterlimit:4;stroke-dasharray:none" />
+      </g>
+    </g>
   </g>
- <view id="Pafera" viewBox="0 0 100 100"/>
-  <view id="Add" viewBox="100 0 100 100"/>
-  <view id="Cancel" viewBox="200 0 100 100"/>
-  <view id="Down" viewBox="300 0 100 100"/>
-  <view id="Home" viewBox="400 0 100 100"/>
-  <view id="Language" viewBox="500 0 100 100"/>
-  <view id="Lock" viewBox="600 0 100 100"/>
-  <view id="Monitor" viewBox="700 0 100 100"/>
-  <view id="Check" viewBox="800 0 100 100"/>
-  <view id="Phone" viewBox="900 0 100 100"/>
-  <view id="Tag" viewBox="1000 0 100 100"/>
-  <view id="User" viewBox="1100 0 100 100"/>
-  <view id="Star" viewBox="1200 0 100 100"/>
-  <view id="Settings" viewBox="1300 0 100 100"/>
-  <view id="Play" viewBox="1400 0 100 100"/>
-  <view id="Pause" viewBox="1500 0 100 100"/>
-  <view id="Stop" viewBox="1600 0 100 100"/>
-  <view id="Power" viewBox="1700 0 100 100"/>
-  <view id="Subtitles" viewBox="1800 0 100 100"/>
-  <view id="Volume" viewBox="1900 0 100 100"/>
-  <view id="VolumeDown" viewBox="2000 0 100 100"/>
-  <view id="VolumeUp" viewBox="2100 0 100 100"/>
-  <view id="Mute" viewBox="2200 0 100 100"/>
-  <view id="Image" viewBox="2300 0 100 100"/>
-  <view id="Music" viewBox="2400 0 100 100"/>
-  <view id="Microphone" viewBox="2500 0 100 100"/>
-  <view id="Video" viewBox="2600 0 100 100"/>
-  <view id="Book" viewBox="2700 0 100 100"/>
-  <view id="CD" viewBox="2800 0 100 100"/>
-  <view id="Next" viewBox="2900 0 100 100"/>
-  <view id="FastForward" viewBox="3000 0 100 100"/>
-  <view id="Heart" viewBox="3100 0 100 100"/>
+  <view
+     id="Pafera"
+     viewBox="0 0 100 100" />
+  <view
+     id="Add"
+     viewBox="100 0 100 100" />
+  <view
+     id="Cancel"
+     viewBox="200 0 100 100" />
+  <view
+     id="Down"
+     viewBox="300 0 100 100" />
+  <view
+     id="Home"
+     viewBox="400 0 100 100" />
+  <view
+     id="Language"
+     viewBox="500 0 100 100" />
+  <view
+     id="Lock"
+     viewBox="600 0 100 100" />
+  <view
+     id="Monitor"
+     viewBox="700 0 100 100" />
+  <view
+     id="Check"
+     viewBox="800 0 100 100" />
+  <view
+     id="Phone"
+     viewBox="900 0 100 100" />
+  <view
+     id="Tag"
+     viewBox="1000 0 100 100" />
+  <view
+     id="User"
+     viewBox="1100 0 100 100" />
+  <view
+     id="Star"
+     viewBox="1200 0 100 100" />
+  <view
+     id="Settings"
+     viewBox="1300 0 100 100" />
+  <view
+     id="Play"
+     viewBox="1400 0 100 100" />
+  <view
+     id="Pause"
+     viewBox="1500 0 100 100" />
+  <view
+     id="Stop"
+     viewBox="1600 0 100 100" />
+  <view
+     id="Power"
+     viewBox="1700 0 100 100" />
+  <view
+     id="Subtitles"
+     viewBox="1800 0 100 100" />
+  <view
+     id="Volume"
+     viewBox="1900 0 100 100" />
+  <view
+     id="VolumeDown"
+     viewBox="2000 0 100 100" />
+  <view
+     id="VolumeUp"
+     viewBox="2100 0 100 100" />
+  <view
+     id="Mute"
+     viewBox="2200 0 100 100" />
+  <view
+     id="Image"
+     viewBox="2300 0 100 100" />
+  <view
+     id="Music"
+     viewBox="2400 0 100 100" />
+  <view
+     id="Microphone"
+     viewBox="2500 0 100 100" />
+  <view
+     id="Video"
+     viewBox="2600 0 100 100" />
+  <view
+     id="Book"
+     viewBox="2700 0 100 100" />
+  <view
+     id="CD"
+     viewBox="2800 0 100 100" />
+  <view
+     id="Next"
+     viewBox="2900 0 100 100" />
+  <view
+     id="FastForward"
+     viewBox="3000 0 100 100" />
+  <view
+     id="Heart"
+     viewBox="3100 0 100 100" />
+  <view
+     id="Warning"
+     viewBox="3200 0 100 100" />
 </svg>

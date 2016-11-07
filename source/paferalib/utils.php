@@ -66,7 +66,7 @@ function FromShortCode($s)
   return $result;
 }
 
-function SUIDToShortCodes($suids)
+function ToShortCodes($suids)
 {
   $results  = [];
 
@@ -78,7 +78,7 @@ function SUIDToShortCodes($suids)
   return $results;
 }
 
-function ShortCodeToSUID($shortcodes)
+function FromShortCodes($shortcodes)
 {
   $results  = [];
 
@@ -93,24 +93,12 @@ function ShortCodeToSUID($shortcodes)
 # Thanks to http://stackoverflow.com/questions/2040240/php-function-to-generate-v4-uuid
 function UUID4()
 {
-    $data = openssl_random_pseudo_bytes(16);
+  $data = openssl_random_pseudo_bytes(16);
 
-    $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0010
-    $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
+  $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0010
+  $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
 
-    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-}
-
-function RandSeq($arr, $num = 1)
-{
-    $keys = array_keys($arr);
-    shuffle($keys);
-
-    $r = array();
-    for ($i = 0; $i < $num; $i++) {
-        $r[$keys[$i]] = $arr[$keys[$i]];
-    }
-    return $r;
+  return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
 
 // ====================================================================
@@ -126,7 +114,8 @@ function Average($a)
 }
 
 // ====================================================================
-function ShuffleArray($ls)
+// Returns an array with the key: value pairs rearranged
+function KShuffle($ls)
 {
   if (!is_array($ls))
     return $ls;
@@ -134,7 +123,7 @@ function ShuffleArray($ls)
   $keys = array_keys($ls);
   shuffle($keys);
 
-  $random = array();
+  $random = [];
 
   foreach ($keys as $key)
     $random[$key] = $ls[$key];
@@ -311,11 +300,6 @@ function BlowFish($input, $rounds = 7)
   return crypt($input, sprintf('$2a$%02d$', $rounds) . $salt);
 }
 
-function EscapeSQL($s)
-{
-  return str_replace(["'", '"'], ["''", '""'], $s);
-}
-
 // Checks an uploaded file for errors. Returns the path to the uploaded file
 function CheckUpload($filename, $sizelimit = 1024 * 1024 * 10)
 {
@@ -346,113 +330,6 @@ function CheckUpload($filename, $sizelimit = 1024 * 1024 * 10)
     throw new RuntimeException('Failed to move uploaded file.');
 
   return $newfilename;
-}
-
-# Thanks to http://blog-en.openalfa.com/how-to-read-and-write-json-files-in-php/
-function code2utf($num){
-    if($num<128)
-        return chr($num);
-    if($num<1024)
-          return chr(($num>>6)+192).chr(($num&63)+128);
-    if($num<32768)
-        return chr(($num>>12)+224).chr((($num>>6)&63)+128)
-              .chr(($num&63)+128);
-    if($num<2097152)
-        return chr(($num>>18)+240).chr((($num>>12)&63)+128)
-                .chr((($num>>6)&63)+128).chr(($num&63)+128);
-    return '';
-}
-
-function unescape($strIn, $iconv_to = 'UTF-8') {
-    $strOut = '';
-    $iPos = 0;
-    $len = strlen ($strIn);
-    while ($iPos < $len) {
-        $charAt = substr ($strIn, $iPos, 1);
-        if ($charAt == '\'') {
-            $iPos++;
-            $charAt = substr ($strIn, $iPos, 1);
-            if ($charAt == 'u') {
-                // Unicode character
-                $iPos++;
-                $unicodeHexVal = substr ($strIn, $iPos, 4);
-                $unicode = hexdec ($unicodeHexVal);
-                $strOut .= code2utf($unicode);
-                $iPos += 4;
-            }
-            else {
-                // Escaped ascii character
-                $hexVal = substr ($strIn, $iPos, 2);
-                if (hexdec($hexVal) > 127) {
-                    // Convert to Unicode
-                    $strOut .= code2utf(hexdec ($hexVal));
-                }
-                else {
-                    $strOut .= chr (hexdec ($hexVal));
-                }
-                $iPos += 2;
-            }
-        }
-        else {
-            $strOut .= $charAt;
-            $iPos++;
-        }
-    }
-    if ($iconv_to != "UTF-8") {
-        $strOut = iconv("UTF-8", $iconv_to, $strOut);
-    }
-    return $strOut;
-}
-
-// Thanks to http://stackoverflow.com/questions/9802033/json-encode-and-replacement-for-json-unescaped-unicode
-// Custom JSON encoder for human readability and unescaped Unicode characters
-function EncodeJSON($data)
-{
-  switch ($type = gettype($data))
-  {
-    case 'NULL':
-      return 'null';
-    case 'boolean':
-      return ($data ? 'true' : 'false');
-    case 'integer':
-    case 'double':
-    case 'float':
-      return $data;
-    case 'string':
-      return '"' . str_replace('"', '\"', $data) . '"';
-    case 'object':
-      $data = get_object_vars($data);
-    case 'array':
-      $output_index_count = 0;
-      $output_indexed     = array();
-      $output_associative = array();
-
-      foreach ($data as $key => $value)
-      {
-        $output_indexed[]     = EncodeJSON($value);
-
-        switch (gettype($key))
-        {
-          case 'integer':
-          case 'double':
-          case 'float':
-            $key  = '"' . $key . '"';
-            break;
-          default:
-            $key  = EncodeJSON($key);
-        };
-        $output_associative[] =  $key . ':' . EncodeJSON($value);
-
-        if ($output_index_count !== NULL && $output_index_count++ !== $key)
-          $output_index_count = NULL;
-      }
-      if ($output_index_count !== NULL)
-        return '[' . implode(",\n", $output_indexed) . ']';
-
-      return '{' . implode(",\n", $output_associative) . '}';
-    default:
-        return ''; // Not supported
-  }
 }
 
 // Gives a path for an ID separated into subdirectories by thousands
